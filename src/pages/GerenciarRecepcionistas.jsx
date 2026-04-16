@@ -7,7 +7,6 @@ export default function GerenciarRecepcionistas() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Estados para o formulário (Cadastro/Edição)
   const [idEditando, setIdEditando] = useState(null);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -32,21 +31,34 @@ export default function GerenciarRecepcionistas() {
   async function handleSave(e) {
     e.preventDefault();
     try {
-      const dados = { nome, email, senha, status: "ATIVO" };
+      const dados = { 
+        nome, 
+        email, 
+        senha, 
+        status: "ATIVO",
+        tipo: "RECEPCIONISTA" 
+      };
 
       if (idEditando) {
-        // Se tem ID, chama o PUT que a gente criou no Java
         await api.put(`/recepcionistas/${idEditando}`, dados);
       } else {
-        // Se não tem ID, chama o POST
         await api.post('/recepcionistas', dados);
       }
 
       closeModal();
       loadEquipe();
-    } catch (err) {
-      alert(err.response?.data || "Erro ao salvar recepcionista");
-    }
+      alert("Funcionário salvo com sucesso! 🚀");
+    }  catch (err) {
+  console.error("ERRO REAL:", err.response?.data);
+  
+  // Se for um objeto, a gente tenta pegar a mensagem dentro dele
+  const erroBruto = err.response?.data;
+  const mensagem = typeof erroBruto === 'object' 
+    ? (erroBruto.message || JSON.stringify(erroBruto)) 
+    : erroBruto;
+
+  alert("O Java barrou: " + (mensagem || "Erro desconhecido"));
+}
   }
 
   async function handleDelete(id) {
@@ -65,7 +77,7 @@ export default function GerenciarRecepcionistas() {
       setIdEditando(funcionario.id);
       setNome(funcionario.nome);
       setEmail(funcionario.email);
-      setSenha(''); // Senha a gente deixa em branco na edição por segurança
+      setSenha('');
     }
     setIsModalOpen(true);
   }
@@ -82,7 +94,7 @@ export default function GerenciarRecepcionistas() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-white italic tracking-tighter">GESTÃO DE EQUIPE</h1>
+          <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">Gestão de Equipe</h1>
           <p className="text-zinc-500 text-sm uppercase tracking-widest font-bold">Administração de Recepcionistas</p>
         </div>
         <button 
@@ -93,7 +105,6 @@ export default function GerenciarRecepcionistas() {
         </button>
       </div>
 
-      {/* TABELA DE EQUIPE */}
       <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden backdrop-blur-md">
         <table className="w-full text-left">
           <thead>
@@ -106,6 +117,8 @@ export default function GerenciarRecepcionistas() {
           <tbody className="divide-y divide-zinc-800">
             {loading ? (
               <tr><td colSpan="3" className="p-10 text-center text-zinc-500 animate-pulse font-black uppercase">Sincronizando equipe...</td></tr>
+            ) : equipe.length === 0 ? (
+              <tr><td colSpan="3" className="p-10 text-center text-zinc-600 font-bold uppercase">Nenhum recepcionista cadastrado.</td></tr>
             ) : equipe.map((func) => (
               <tr key={func.id} className="hover:bg-zinc-800/30 transition-colors group">
                 <td className="p-5 font-bold text-zinc-100 group-hover:text-blue-400 transition-colors">{func.nome}</td>
@@ -120,7 +133,6 @@ export default function GerenciarRecepcionistas() {
         </table>
       </div>
 
-      {/* MODAL DE CADASTRO/EDIÇÃO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
           <div className="bg-zinc-950 border border-zinc-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in duration-300">
@@ -132,21 +144,30 @@ export default function GerenciarRecepcionistas() {
             </div>
 
             <form onSubmit={handleSave} className="space-y-5">
-              <input 
-                placeholder="Nome Completo" required value={nome} onChange={e => setNome(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white focus:border-blue-500 outline-none transition-all"
-              />
-              <input 
-                type="email" placeholder="E-mail de Login" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white focus:border-blue-500 outline-none transition-all"
-              />
-              <input 
-                type="password" placeholder={idEditando ? "Nova Senha (opcional)" : "Senha de Acesso"} 
-                required={!idEditando} value={senha} onChange={e => setSenha(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white focus:border-blue-500 outline-none transition-all"
-              />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">Nome completo</label>
+                <input 
+                  placeholder="Ex: Cerginho da Pereira" required value={nome} onChange={e => setNome(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">E-mail de acesso</label>
+                <input 
+                  type="email" placeholder="professorcerginho@leitura.com" required value={email} onChange={e => setEmail(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">{idEditando ? "Nova Senha (deixe vazio para manter)" : "Senha de Acesso"}</label>
+                <input 
+                  type="password" placeholder="••••••••" 
+                  required={!idEditando} value={senha} onChange={e => setSenha(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
               
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20 uppercase italic">
+              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20 uppercase italic mt-4">
                 <Save size={20} /> {idEditando ? 'Salvar Alterações' : 'Confirmar Admissão'}
               </button>
             </form>

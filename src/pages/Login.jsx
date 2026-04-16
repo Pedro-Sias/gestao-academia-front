@@ -19,6 +19,7 @@ export default function Login() {
             const { token, tipo } = response.data;
 
             localStorage.setItem('token', token);
+            localStorage.setItem('tipo', tipo);
 
             
             if (tipo === 'ADMIN') {
@@ -26,7 +27,6 @@ export default function Login() {
             } else if (tipo === 'RECEPCIONISTA') {
                 navigate('/recepcao');
             } else {
-                // Caso você crie um perfil de Aluno no futuro
                 navigate('/perfil-aluno');
             }
 
