@@ -13,7 +13,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Bate na rota real do Java que a gente liberou no SecurityConfig
         const response = await api.get('/api/stats'); 
         
         if (response.data) {
@@ -31,7 +30,7 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  // Formata os valores para exibição
+  
   const stats = [
     { 
       name: 'Alunos Ativos', 
